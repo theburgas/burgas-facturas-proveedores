@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Proveedores Burgas" />
+<title>The Burgas - Proveedores</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f5f5f5;
+  min-height: 100vh;
+  padding: 16px;
+  color: #1a1a1a;
+}
+.header {
+  background: #1b3a5c;
+  color: white;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-logo { font-size: 28px; }
+.header h1 { font-size: 18px; font-weight: 600; }
+.header p { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  border: 1px solid #ebebeb;
+}
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.num {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; color: #888;
+  flex-shrink: 0;
+}
+.num.active { background: #eeedfe; color: #534ab7; }
+.num.done   { background: #eaf3de; color: #27914e; }
+.step-title { font-size: 16px; font-weight: 600; }
+.step-desc  { font-size: 13px; color: #777; line-height: 1.5; margin-left: 40px; }
+
+.upload-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+.upload-btn {
+  border: 1.5px dashed #d0d0d0;
+  border-radius: 12px;
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  background: #fafafa;
+  font-size: 14px;
+  color: #555;
+  font-weight: 600;
+}
+.upload-btn:active { background: #f0f0f0; }
+.upload-btn span { display: block; font-size: 28px; margin-bottom: 6px; }
+#cameraInput, #galleryInput { display: none; }
+#preview {
+  width: 100%; border-radius: 10px; margin-top: 12px;
+  display: none; max-height: 240px; object-fit: cover;
+}
+
+.btn {
+  width: 100%; padding: 14px;
+  border: none; border-radius: 12px;
+  font-size: 16px; font-weight: 600;
+  cursor: pointer; margin-top: 14px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-purple { background: #534ab7; color: white; }
+.btn-purple:active:not(:disabled) { background: #3c3489; }
+.btn-green  { background: #27914e; color: white; }
+.btn-green:active:not(:disabled)  { background: #1b5c3a; }
+.btn-light  { background: #f1f1f5; color: #333; }
+.btn-orange { background: #d95f0e; color: white; }
+.btn-orange:active:not(:disabled) { background: #b34e0b; }
+.btn-danger { background: #fcebeb; color: #791f1f; padding: 10px 12px; font-size: 13px; margin-top: 8px; }
+
+.status {
+  font-size: 13px; padding: 10px 14px;
+  border-radius: 10px; margin-top: 10px;
+  display: none; line-height: 1.5;
+}
+.s-loading { background: #f5f5f5; color: #666; }
+.s-ok      { background: #eaf3de; color: #1b5c3a; }
+.s-err     { background: #fcebeb; color: #791f1f; }
+.s-warn    { background: #fff8e6; color: #7a4f00; }
+
+/* CHEQUEO PREVIO */
+.review-box { display: none; margin-top: 14px; }
+.check-banner {
+  background: #fffbf0;
+  border: 1.5px solid #f0c040;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.check-banner-title {
+  font-size: 13px; font-weight: 700;
+  color: #7a4f00; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.check-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.check-item { }
+.check-item label {
+  display: block; font-size: 11px; font-weight: 700;
+  color: #999; text-transform: uppercase; letter-spacing: 0.3px;
+  margin-bottom: 3px;
+}
+.check-item .val {
+  font-size: 15px; font-weight: 600; color: #1a1a1a;
+}
+.check-item .val.monto { color: #d95f0e; font-size: 18px; }
+.check-item .val.prov  { color: #1b3a5c; }
+
+/* CHIPS de proveedor */
+.prov-chips {
+  display: flex; flex-wrap: wrap; gap: 7px;
+  margin-bottom: 12px;
+}
+.chip {
+  padding: 6px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+  border: 1.5px solid #d0d0d0;
+  background: #fafafa; cursor: pointer; color: #555;
+  transition: all .15s;
+}
+.chip:active { transform: scale(.96); }
+.chip.sel {
+  background: #1b3a5c; color: white;
+  border-color: #1b3a5c; font-weight: 700;
+}
+.chip.auto-sel {
+  background: #27914e; color: white;
+  border-color: #27914e; font-weight: 700;
+}
+
+.field { margin-top: 12px; }
+.field label {
+  display: block; font-size: 12px; font-weight: 700;
+  color: #666; margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.field input, .field textarea, .field select {
+  width: 100%; border: 1px solid #d8d8d8;
+  border-radius: 10px; padding: 12px;
+  font-size: 15px; font-family: inherit; background: white;
+}
+.field textarea { min-height: 64px; resize: vertical; }
+.field input.hi, .field select.hi { border-color: #f0c040; background: #fffdf5; }
+
+.grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+
+/* TIPO SELECTOR */
+.tipo-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.tipo-btn {
+  flex: 1; min-width: 80px;
+  padding: 10px 8px; border-radius: 10px;
+  border: 1.5px solid #d0d0d0; background: #fafafa;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  text-align: center; color: #555;
+}
+.tipo-btn.sel { background: #eeedfe; border-color: #534ab7; color: #534ab7; }
+
+/* SUCCESS */
+.success-banner {
+  background: #1b5c3a; color: white;
+  border-radius: 14px; padding: 20px;
+  text-align: center; display: none; margin-bottom: 12px;
+}
+.success-banner .check { font-size: 40px; margin-bottom: 8px; }
+.success-banner h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.success-banner p  { font-size: 13px; opacity: 0.85; }
+.btn-reset {
+  background: white; color: #1b5c3a;
+  border: 2px solid #1b5c3a;
+  width: 100%; padding: 12px;
+  border-radius: 12px; font-size: 15px; font-weight: 600;
+  margin-top: 12px; cursor: pointer;
+}
+
+@media (min-width: 700px) {
+  body { max-width: 720px; margin: 0 auto; }
+  .grid { grid-template-columns: 1fr 1fr; column-gap: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🧾</div>
+  <div>
+    <h1>The Burgas</h1>
+    <p>Carga de facturas de proveedores</p>
+  </div>
+</div>
+
+<div id="successBanner" class="success-banner">
+  <div class="check">✅</div>
+  <h2>Factura cargada</h2>
+  <p id="successMsg">Los datos se guardaron en Google Sheets</p>
+  <button class="btn-reset" onclick="resetApp()">Cargar otra factura</button>
+</div>
+
+<div id="appContent">
+
+  <!-- PASO 1: FOTO -->
+  <div class="card">
+    <div class="step-header">
+      <div class="num active" id="n1">📷</div>
+      <span class="step-title">Fotografiá la factura</span>
+    </div>
+    <div class="step-desc">
+      Sacá una foto clara o elegí una imagen de la factura del proveedor.
+    </div>
+    <div class="upload-actions">
+      <button class="upload-btn" type="button" onclick="document.getElementById('cameraInput').click()">
+        <span>📷</span>Sacar foto
+      </button>
+      <button class="upload-btn" type="button" onclick="document.getElementById('galleryInput').click()">
+        <span>🖼️</span>Subir imagen
+      </button>
+    </div>
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" />
+    <input type="file" id="galleryInput" accept="image/*" />
+    <img id="preview" alt="Vista previa" />
+  </div>
+
+  <!-- PASO 2: EXTRAER -->
+  <div class="card">
+    <div class="step-header">
+      <div class="num" id="n2">2</div>
+      <span class="step-title">Extraer y revisar datos</span>
+    </div>
+    <div class="step-desc">
+      Gemini lee la factura. Revisá los datos antes de guardar — especialmente proveedor y monto.
+    </div>
+    <div class="status s-loading" id="st1"></div>
+    <button class="btn btn-purple" id="btnExtract" disabled onclick="extraerDatos()">
+      ⚡ Extraer datos
+    </button>
+
+    <div class="review-box" id="reviewBox">
+
+      <!-- CHEQUEO PREVIO -->
+      <div class="check-banner" id="checkBanner">
+        <div class="check-banner-title">⚠️ Revisá antes de guardar</div>
+        <div class="check-grid">
+          <div class="check-item">
+            <label>Proveedor detectado</label>
+            <div class="val prov" id="ck-prov">—</div>
+          </div>
+          <div class="check-item">
+            <label>Tipo</label>
+            <div class="val" id="ck-tipo">—</div>
+          </div>
+          <div class="check-item">
+            <label>N° Comprobante</label>
+            <div class="val" id="ck-num">—</div>
+          </div>
+          <div class="check-item">
+            <label>Fecha</label>
+            <div class="val" id="ck-fecha">—</div>
+          </div>
+          <div class="check-item" style="grid-column:1/-1">
+            <label>Monto total</label>
+            <div class="val monto" id="ck-monto">—</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#7a4f00;">Si algo está mal, editalo en el formulario de abajo antes de guardar.</div>
+      </div>
+
+      <!-- SELECTOR PROVEEDOR -->
+      <div class="field">
+        <label>Proveedor</label>
+        <div class="prov-chips" id="provChips"></div>
+        <input id="f-proveedor" autocomplete="off" placeholder="O escribí el nombre" oninput="syncProvChips(this.value)" />
+      </div>
+
+      <!-- TIPO -->
+      <div class="field">
+        <label>Tipo de comprobante</label>
+        <div class="tipo-row" id="tipoRow">
+          <div class="tipo-btn sel" onclick="selectTipo('Factura',this)">Factura</div>
+          <div class="tipo-btn" onclick="selectTipo('Remito',this)">Remito</div>
+          <div class="tipo-btn" onclick="selectTipo('Pago',this)">Pago</div>
+          <div class="tipo-btn" onclick="selectTipo('E-cheq',this)">E-cheq</div>
+        </div>
+        <input type="hidden" id="f-tipo" value="Factura" />
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>N° Comprobante</label>
+          <input id="f-nro" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>Fecha</label>
+          <input id="f-fecha" autocomplete="off" placeholder="DD/MM/YYYY" />
+        </div>
+        <div class="field">
+          <label>CUIT Proveedor</label>
+          <input id="f-cuit" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>Condición venta</label>
+          <input id="f-condicion" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>Compra ($)</label>
+          <input id="f-compra" class="hi" inputmode="decimal" autocomplete="off" placeholder="Si es compra/factura/remito" oninput="syncMontoBanner()" />
+        </div>
+        <div class="field">
+          <label>Pago ($)</label>
+          <input id="f-pago" inputmode="decimal" autocomplete="off" placeholder="Si es transferencia/efectivo/cheque" oninput="syncMontoBanner()" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Descripción / Observaciones</label>
+        <textarea id="f-observaciones"></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 3: GUARDAR -->
+  <div class="card">
+    <div class="step-header">
+      <div class="num" id="n3">3</div>
+      <span class="step-title">Confirmar y guardar</span>
+    </div>
+    <div class="step-desc">
+      Revisá el chequeo previo. Al confirmar se guarda en la hoja del proveedor y en el historial.
+    </div>
+    <button class="btn btn-green" id="btnSend" disabled onclick="enviarSheets()">
+      📊 Guardar en planilla
+    </button>
+    <div class="status" id="st2"></div>
+  </div>
+
+</div>
+
+<script>
+const PROVIDERS = [
+  'AUGUSTO CARNES','SALVADOR SGRO','LAS DINAS','SILVIO QUESOS',
+  'OLLARI','MACOHUE','DEL CAMPO PANES','CONURBANO LOGISTICA',
+  'PROVEEDOR 10','FACUNDO QUESOS'
+];
+
+let imageBase64 = null;
+let imageMediaType = 'image/jpeg';
+let extractedData = null;
+let selectedTipo = 'Factura';
+
+document.getElementById('cameraInput').addEventListener('change', handleFileChange);
+document.getElementById('galleryInput').addEventListener('change', handleFileChange);
+
+function handleFileChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  imageMediaType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    imageBase64 = ev.target.result.split(',')[1];
+    const prev = document.getElementById('preview');
+    prev.src = ev.target.result;
+    prev.style.display = 'block';
+    document.getElementById('btnExtract').disabled = false;
+    document.getElementById('reviewBox').style.display = 'none';
+    document.getElementById('btnSend').disabled = true;
+    setStep(2, 'active');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function extraerDatos() {
+  const btn = document.getElementById('btnExtract');
+  const st  = document.getElementById('st1');
+  btn.disabled = true;
+  btn.textContent = '⏳ Procesando...';
+  showStatus(st, 'loading', 'Gemini está leyendo la factura...');
+
+  try {
+    const data = await postAction({ action: 'extract', imageBase64, imageMediaType });
+    if (!data.ok) throw new Error(data.error || 'No se pudo extraer la factura');
+
+    extractedData = data.invoice || {};
+    renderReviewForm(extractedData);
+
+    document.getElementById('reviewBox').style.display = 'block';
+    showStatus(st, 'ok', 'Datos extraídos. Revisá el chequeo previo antes de guardar.');
+    btn.textContent = '✓ Datos extraídos';
+    setStep(3, 'active');
+    document.getElementById('btnSend').disabled = false;
+  } catch (err) {
+    showStatus(st, 'err', err.message || 'No se pudo procesar la imagen.');
+    btn.disabled = false;
+    btn.textContent = '⚡ Extraer datos';
+  }
+}
+
+function renderReviewForm(invoice) {
+  // Detectar proveedor conocido
+  const provUpper = (invoice.proveedor || '').toUpperCase();
+  let matchedProv = PROVIDERS.find(p => provUpper.includes(p) || p.includes(provUpper.substring(0,5))) || null;
+
+  // Detectar tipo
+  let tipo = invoice.tipo || 'Factura';
+  if (!tipo) {
+    const nro = (invoice.nro_factura || '').toUpperCase();
+    if (/REMIT/i.test(nro) || /REMIT/i.test(invoice.proveedor||'')) tipo = 'Remito';
+  }
+  selectedTipo = tipo;
+
+  // Detectar monto
+  const compra = invoice.tipo === 'Pago' || invoice.tipo === 'E-cheq' ? '' : (invoice.total || '');
+  const pago   = invoice.tipo === 'Pago' || invoice.tipo === 'E-cheq' ? (invoice.total || '') : '';
+
+  // Llenar campos
+  document.getElementById('f-proveedor').value = invoice.proveedor || '';
+  document.getElementById('f-cuit').value = invoice.cuit || '';
+  document.getElementById('f-nro').value = invoice.nro_factura || '';
+  document.getElementById('f-fecha').value = invoice.fecha || '';
+  document.getElementById('f-condicion').value = invoice.condicion_venta || '';
+  document.getElementById('f-compra').value = compra;
+  document.getElementById('f-pago').value = pago;
+  document.getElementById('f-observaciones').value = invoice.observaciones || '';
+  document.getElementById('f-tipo').value = tipo;
+
+  // Tipo buttons
+  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('sel'));
+  const tipoBtn = [...document.querySelectorAll('.tipo-btn')].find(b => b.textContent === tipo);
+  if (tipoBtn) tipoBtn.classList.add('sel');
+
+  // Chips de proveedor
+  const chips = document.getElementById('provChips');
+  chips.innerHTML = '';
+  PROVIDERS.forEach(p => {
+    const isMatch = p === matchedProv;
+    const c = document.createElement('div');
+    c.className = 'chip' + (isMatch ? ' auto-sel' : '');
+    c.textContent = p;
+    c.onclick = () => {
+      chips.querySelectorAll('.chip').forEach(x => x.classList.remove('sel','auto-sel'));
+      c.classList.add('sel');
+      document.getElementById('f-proveedor').value = p;
+      updateCheckBanner();
+    };
+    chips.appendChild(c);
+  });
+
+  updateCheckBanner();
+}
+
+function syncProvChips(val) {
+  const chips = document.getElementById('provChips');
+  const upper = val.toUpperCase();
+  const match = PROVIDERS.find(p => p === upper);
+  chips.querySelectorAll('.chip').forEach(c => {
+    c.classList.remove('sel','auto-sel');
+    if (c.textContent === match) c.classList.add('sel');
+  });
+  updateCheckBanner();
+}
+
+function selectTipo(tipo, el) {
+  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedTipo = tipo;
+  document.getElementById('f-tipo').value = tipo;
+  // Swap compra/pago hint
+  const isPago = tipo === 'Pago' || tipo === 'E-cheq';
+  document.getElementById('f-compra').classList.toggle('hi', !isPago);
+  document.getElementById('f-pago').classList.toggle('hi', isPago);
+  updateCheckBanner();
+}
+
+function syncMontoBanner() { updateCheckBanner(); }
+
+function updateCheckBanner() {
+  const prov  = document.getElementById('f-proveedor').value || '—';
+  const tipo  = document.getElementById('f-tipo').value || '—';
+  const num   = document.getElementById('f-nro').value || '—';
+  const fecha = document.getElementById('f-fecha').value || '—';
+  const compra = parseFloat(document.getElementById('f-compra').value) || 0;
+  const pago   = parseFloat(document.getElementById('f-pago').value) || 0;
+  const monto  = compra || pago;
+
+  document.getElementById('ck-prov').textContent  = prov;
+  document.getElementById('ck-tipo').textContent  = tipo;
+  document.getElementById('ck-num').textContent   = num;
+  document.getElementById('ck-fecha').textContent = fecha;
+  document.getElementById('ck-monto').textContent = monto
+    ? '$ ' + monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })
+    : '—';
+}
+
+async function enviarSheets() {
+  const btn = document.getElementById('btnSend');
+  const st  = document.getElementById('st2');
+
+  const selChip = document.getElementById('provChips').querySelector('.sel,.auto-sel');
+  const proveedor = selChip ? selChip.textContent : document.getElementById('f-proveedor').value.trim();
+  if (!proveedor) { showStatus(st,'err','Seleccioná o escribí el proveedor'); return; }
+
+  const compra = parseFloat(document.getElementById('f-compra').value) || null;
+  const pago   = parseFloat(document.getElementById('f-pago').value) || null;
+  if (!compra && !pago) { showStatus(st,'err','Ingresá el monto de compra o pago'); return; }
+
+  const fecha = document.getElementById('f-fecha').value.trim();
+  if (!fecha) { showStatus(st,'err','Ingresá la fecha'); return; }
+
+  const payload = {
+    action: 'saveProveedor',
+    invoice: {
+      proveedor,
+      tipo: document.getElementById('f-tipo').value,
+      cuit: document.getElementById('f-cuit').value.trim(),
+      nro_factura: document.getElementById('f-nro').value.trim(),
+      fecha,
+      condicion_venta: document.getElementById('f-condicion').value.trim(),
+      compra,
+      pago,
+      observaciones: document.getElementById('f-observaciones').value.trim()
+    },
+    imageBase64,
+    imageMediaType
+  };
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando...';
+  showStatus(st, 'loading', 'Guardando en la hoja del proveedor...');
+
+  try {
+    const data = await postAction(payload);
+    if (!data.ok) throw new Error(data.error || 'No se pudo guardar');
+
+    setStep(1,'done'); setStep(2,'done'); setStep(3,'done');
+    document.getElementById('st2').style.display = 'none';
+    document.getElementById('successMsg').textContent =
+      (payload.invoice.tipo === 'Pago' ? 'Pago' : 'Factura') +
+      ' de ' + proveedor + ' cargada correctamente';
+    document.getElementById('successBanner').style.display = 'block';
+    document.getElementById('appContent').style.display = 'none';
+  } catch (err) {
+    showStatus(st,'err', err.message || 'Error al guardar');
+    btn.disabled = false;
+    btn.textContent = '📊 Reintentar';
+  }
+}
+
+async function postAction(payload) {
+  if (window.google?.script?.run) return postAppsScriptAction(payload);
+  const APPS_SCRIPT_URL = window._APPS_SCRIPT_URL || '';
+  if (!APPS_SCRIPT_URL) throw new Error('APPS_SCRIPT_URL no configurada');
+  const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+  return res.json();
+}
+
+function postAppsScriptAction(payload) {
+  const map = { extract: 'extractInvoiceWeb', saveProveedor: 'saveProveedorWeb' };
+  const fn = map[payload.action];
+  if (!fn) return Promise.resolve({ ok: false, error: 'Accion no soportada' });
+  return new Promise(resolve => {
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(err => resolve({ ok: false, error: err.message || String(err) }))
+      [fn](payload);
+  });
+}
+
+function resetApp() {
+  imageBase64 = null; imageMediaType = 'image/jpeg'; extractedData = null;
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('preview').src = '';
+  document.getElementById('cameraInput').value = '';
+  document.getElementById('galleryInput').value = '';
+  document.getElementById('btnExtract').disabled = true;
+  document.getElementById('btnExtract').textContent = '⚡ Extraer datos';
+  document.getElementById('btnSend').disabled = true;
+  document.getElementById('btnSend').textContent = '📊 Guardar en planilla';
+  document.getElementById('reviewBox').style.display = 'none';
+  document.getElementById('st1').style.display = 'none';
+  document.getElementById('st2').style.display = 'none';
+  document.getElementById('successBanner').style.display = 'none';
+  document.getElementById('appContent').style.display = 'block';
+  setStep(1,'active'); setStep(2,''); setStep(3,'');
+  document.getElementById('n2').textContent = '2';
+  document.getElementById('n3').textContent = '3';
+}
+
+function setStep(n, state) {
+  const el = document.getElementById('n' + n);
+  el.className = 'num' + (state ? ' ' + state : '');
+  if (state === 'done') el.textContent = '✓';
+}
+
+function showStatus(el, type, msg) {
+  el.className = 'status s-' + type;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+</script>
+</body>
+</html>
